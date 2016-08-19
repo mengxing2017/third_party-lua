@@ -82,6 +82,21 @@
 #define lua_readline(L,b,p)	((void)L, ((b)=readline(p)) != NULL)
 #define lua_saveline(L,line)	((void)L, add_history(line))
 #define lua_freeline(L,b)	((void)L, free(b))
+#define lua_loadhistory()	/* no-op */
+
+#elif defined(LUA_USE_LINENOISE)/* }{ */
+
+#include <linenoise.h>
+#define HISTORY_FILE		"/tmp/lua-history.txt"
+#define lua_readline(L,b,p)	((void)L, ((b)=linenoise(p)) != NULL)
+#define lua_saveline(L,line)	\
+do { \
+	(void)L; \
+	linenoiseHistoryAdd(line); \
+	linenoiseHistorySave(HISTORY_FILE); \
+} while(0);
+#define lua_freeline(L,b)	((void)L, linenoiseFree(b))
+#define lua_loadhistory()	linenoiseHistoryLoad(HISTORY_FILE)
 
 #else				/* }{ */
 
@@ -90,6 +105,7 @@
         fgets(b, LUA_MAXINPUT, stdin) != NULL)  /* get line */
 #define lua_saveline(L,line)	{ (void)L; (void)line; }
 #define lua_freeline(L,b)	{ (void)L; (void)b; }
+#define lua_loadhistory()	/* no-op */
 
 #endif				/* } */
 
@@ -102,6 +118,7 @@ static lua_State *globalL = NULL;
 
 static const char *progname = LUA_PROGNAME;
 
+#ifndef __Fuchsia__
 
 /*
 ** Hook set by signal function to stop the interpreter.
@@ -123,6 +140,8 @@ static void laction (int i) {
   signal(i, SIG_DFL); /* if another SIGINT happens, terminate process */
   lua_sethook(globalL, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
+
+#endif
 
 
 static void print_usage (const char *badoption) {
@@ -199,9 +218,13 @@ static int docall (lua_State *L, int narg, int nres) {
   lua_pushcfunction(L, msghandler);  /* push message handler */
   lua_insert(L, base);  /* put it under function and args */
   globalL = L;  /* to be available to 'laction' */
+#ifndef __Fuchsia__
   signal(SIGINT, laction);  /* set C-signal handler */
+#endif
   status = lua_pcall(L, narg, nres, base);
+#ifndef __Fuchsia__
   signal(SIGINT, SIG_DFL); /* reset C-signal handler */
+#endif
   lua_remove(L, base);  /* remove message handler from the stack */
   return status;
 }
@@ -559,6 +582,7 @@ static int pmain (lua_State *L) {
     print_usage(argv[script]);  /* 'script' has index of bad arg. */
     return 0;
   }
+  lua_loadhistory();
   if (args & has_v)  /* option '-v'? */
     print_version();
   if (args & has_E) {  /* option '-E'? */

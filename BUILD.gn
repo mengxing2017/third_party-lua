@@ -1,0 +1,79 @@
+# Copyright 2016 The Fuchsia Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("lua_core") {
+  sources = [
+    "src/lapi.c",
+    "src/lcode.c",
+    "src/lctype.c",
+    "src/ldebug.c",
+    "src/ldo.c",
+    "src/ldump.c",
+    "src/lfunc.c",
+    "src/lgc.c",
+    "src/llex.c",
+    "src/lmem.c",
+    "src/lobject.c",
+    "src/lopcodes.c",
+    "src/lparser.c",
+    "src/lstate.c",
+    "src/lstring.c",
+    "src/ltable.c",
+    "src/ltm.c",
+    "src/lundump.c",
+    "src/lvm.c",
+    "src/lzio.c",
+  ]
+}
+
+source_set("lua_lib") {
+  sources = [
+    "src/lauxlib.c",
+    "src/lbaselib.c",
+    "src/lbitlib.c",
+    "src/lcorolib.c",
+    "src/ldblib.c",
+    "src/liolib.c",
+    "src/lmathlib.c",
+    "src/loslib.c",
+    "src/lstrlib.c",
+    "src/ltablib.c",
+    "src/lutf8lib.c",
+    "src/loadlib.c",
+    "src/linit.c",
+  ]
+}
+
+static_library("liblua") {
+  deps = [
+    ":lua_core",
+    ":lua_lib",
+  ]
+}
+
+executable("lua") {
+  sources = [
+    "src/lua.c",
+  ]
+
+  deps = [
+    ":liblua",
+    "//third_party/linenoise",
+  ]
+
+  defines = [
+    "LUA_USE_POSIX",
+    "LUA_USE_LINENOISE",
+  ]
+}
+
+executable("luac") {
+  sources = [
+    "src/luac.c",
+  ]
+
+  deps = [ ":liblua" ]
+
+  defines = [ "LUA_USE_POSIX" ]
+}
