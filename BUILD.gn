@@ -45,7 +45,7 @@ source_set("lua_lib") {
   ]
 }
 
-static_library("liblua") {
+group("liblua") {
   deps = [
     ":lua_core",
     ":lua_lib",
