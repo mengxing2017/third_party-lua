@@ -59,7 +59,7 @@ executable("lua") {
 
   deps = [
     ":liblua",
-    "//third_party/linenoise",
+    "//magenta/third_party/ulib/linenoise",
   ]
 
   defines = [
