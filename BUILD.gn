@@ -73,7 +73,7 @@ executable("lua_bin") {
 
   deps = [
     ":liblua",
-    "//magenta/third_party/ulib/linenoise",
+    "//zircon/third_party/ulib/linenoise",
   ]
 
   defines = [
